@@ -1,12 +1,20 @@
 const express = require(`express`)
 const app = express()
 
-app.use(express.json())
+app.use(express.json()) // membaca data dalam format json
 
-const pelanggaranController = require("../controllers/pelanggaranController")
+let pelanggaranController = require("../controllers/pelanggaranController")
 
-app.get("/", pelanggaranController.getPelanggaran)
-app.post("/", pelanggaranController.addPelanggaran)
-app.put("/:id_pelanggaran", pelanggaranController.updatePelanggaran)
-app.delete("/:id_pelanggaran", pelanggaranController.deletePelanggaran)
+// end-point get data siswa
+app.get("/", pelanggaranController.getDataPelanggaran)
+
+// end-point add data siswa
+app.post("/", pelanggaranController.addDataPelanggaran)
+
+// end-point edit data siswa
+app.put("/:id_pelanggaran", pelanggaranController.editDataPelanggaran)
+
+// end-point delete data siswa
+app.delete("/:id_pelanggaran", pelanggaranController.deleteDataPelanggaran)
+
 module.exports = app

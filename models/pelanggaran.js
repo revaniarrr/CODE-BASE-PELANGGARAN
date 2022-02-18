@@ -19,9 +19,8 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    waktu: DataTypes.DATE,
-    id_siswa: DataTypes.INTEGER,
-    id_user: DataTypes.INTEGER
+    nama_pelanggaran: DataTypes.STRING,
+    poin: DataTypes.DOUBLE
   }, {
     sequelize,
     modelName: 'pelanggaran',
