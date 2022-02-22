@@ -1,9 +1,14 @@
 let pelanggaranSiswaModel = require("../models/index").pelanggaran_siswa
 let detailPelanggaranSiswaModel = require("../models/index").detail_pelanggaran_siswa
 
+
 exports.getData = async (request, response) => {
     let data = await pelanggaranSiswaModel.findAll({
-        include: ["siswa","user"]
+        include: ["siswa","user", {
+            model: detailPelanggaranSiswaModel,
+            as: "detail_pelanggaran_siswa",
+            include: ["pelanggaran"]
+        }]
     })
     return response.json(data)
 }
@@ -37,18 +42,18 @@ exports.addData = (request, response) => {
                         message: error.message
                     })
                 })
-                .catch(error => {
-                    return response.json({
-                        message: error.message
-                    })
-                })
+        })
+        .catch(error => {
+            return response.json({
+                message: error.message
             })
-        }
+        })
+}
 
 exports.updateData = (request, response) => {
 
-            }
+}
 
 exports.deleteData = (request, response) => {
 
-            }
+}

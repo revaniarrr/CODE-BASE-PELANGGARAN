@@ -1,73 +1,66 @@
-const req = require("express/lib/request")
-
-// memanggil file model untuk Pelanggaran
 let modelPelanggaran = require("../models/index").pelanggaran
 
-
-exports.getDataPelanggaran = (request, response) => {
-    modelPelanggaran.findAll()
-    .then(result => {
-        return response.json(result)
-    })
-    .catch(error => {
-        return response.json({
-            message: error.message
-        })
-    })
+exports.getPelanggaran = async (request, response) => {
+    let dataPelanggaran = await modelPelanggaran.findAll()
+    return response.json(dataPelanggaran)
 }
 
-exports.addDataPelanggaran = (request, response) => {
-    // tampung data request
-    let newPelanggaran = {
-        nama_pelanggaran: request.body.nama_pelanggaran,
-        poin: request.body.poin
-    }
-
-    modelPelanggaran.create(newPelanggaran)
-    .then(result => {
-        return response.json({
-            message: `Data pelanggaran berhasil ditambahkan`
-        })
-    })
-    .catch(error => {
-        return response.json({
-            message: error.message
-        })
-    })
-}
-
-exports.editDataPelanggaran = (request, response) => {
-    let id = request.params.id_pelanggaran
+exports.addPelanggaran = (request, response) => {
     let dataPelanggaran = {
         nama_pelanggaran: request.body.nama_pelanggaran,
         poin: request.body.poin
     }
 
-    modelPelanggaran.update(dataPelanggaran, { where: {id_pelanggaran: id} })
-    .then(result => {
-        return response.json({
-            message: `Data pelanggaran berhasil diubah`
+    modelPelanggaran.create(dataPelanggaran)
+        .then(result => {
+            return response.json({
+                message: `Data pelanggaran berhasil ditambahkan`
+            })
         })
-    })
-    .catch(error => {
-        return response.json({
-            message: error.message
+        .catch(error => {
+            return response.json({
+                message: error.message
+            })
         })
-    })
 }
 
-exports.deleteDataPelanggaran = (request, response) => {
-    let id = request.params.id_pelanggaran
+exports.updatePelanggaran = (request, response) => {
+    let params = {
+        id_pelanggaran: request.params.id_pelanggaran
+    }
 
-    modelPelanggaran.destroy({where: {id_pelanggaran: id}})
-    .then(result => {
-        return response.json({
-            message: `Data pelanggaran berhasil dihapus`
+    let dataPelanggaran = {
+        nama_pelanggaran: request.body.nama_pelanggaran,
+        poin: request.body.poin,
+    }
+
+    modelPelanggaran.update(dataPelanggaran, {where: params})
+        .then(result => {
+            return response.json({
+                message: `Data pelanggaran berhasil diubah`
+            })
         })
-    })   
-    .catch(error => {
-        return response.json({
-            message: error.message
+        .catch(error => {
+            return response.json({
+                message: error.message
+            })
         })
-    })
+}
+
+exports.deletePelanggaran = (request, response) => {
+    let params = {
+        id_pelanggaran: request.params.id_pelanggaran
+    }
+
+    modelPelanggaran.destroy({where: params})
+        .then(result => {
+            return response.json({
+                message: `Data Pelanggaran berhasil dihapus`
+            })
+        })
+        .catch(error => {
+            return response.json({
+                message: error.message
+            })
+        })
 }
