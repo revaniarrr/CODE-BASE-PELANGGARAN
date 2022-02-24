@@ -6,16 +6,22 @@ app.use(express.json())
 // call siswa controller
 let siswaController = require("../controllers/siswaController")
 
-// endpoint untuk data siswa
-app.get("/", siswaController.getDataSiswa)
+//call middleware
+let testMiddleware = require("../middlewares/testMiddleware")
+let authorization = require("../middlewares/authorization")
 
-// endpoint untuk add siswa
+// endpoint get data siswa
+app.get("/", [testMiddleware.middleware1,testMiddleware.middleware2,
+    authorization.authorization] ,
+    siswaController.getDataSiswa)
+
+// endpoint add data siswa
 app.post("/", siswaController.addDataSiswa)
 
-// endpoint untuk edit siswa
+// endpoint edit siswa
 app.put("/:id_siswa", siswaController.editDataSiswa)
 
-// endpoint untuk delete siswa
+// endpoint delete siswa
 app.delete("/:id_siswa", siswaController.deleteDataSiswa)
 
-module.exports = app 
+module.exports = app
