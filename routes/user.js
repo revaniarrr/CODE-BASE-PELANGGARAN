@@ -1,21 +1,27 @@
 const express = require(`express`)
 const app = express()
+const {body} = require(`express-validator`)
 
 app.use(express.json()) // membaca data dalam format json
 
-let userController = require("../controllers/userController")
+const userController = require("../controllers/userController")
+
+const userValidator = require("../middlewares/userValidator")
+const authorization = require("../middlewares/authorization")
 
 // end-point get data user
 app.get("/", userController.getDataUser)
 
 // end-point add data user
-app.post("/", userController.addDataUser)
+app.post("/",[authorization.authorization, 
+    userValidator.validate], userController.addDataUser)
 
 // end-point edit data user
-app.put("/:id_user", userController.editDataUser)
+app.put("/:id_user", [authorization.authorization, userValidator.validate],
+userController.editDataUser)
 
 // end-point delete data user
-app.delete("/:id_user", userController.deleteDataUser)
+app.delete("/:id_user", [authorization.authorization],userController.deleteDataUser)
 
 app.post("/auth", userController.authentication)
 
