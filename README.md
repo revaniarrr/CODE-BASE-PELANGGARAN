@@ -1,3 +1,5 @@
+Alasan saya memilih menggunakan Pattern ini dikarenakan kebanyakan dari framework pengembangan website mengadopsi pemrograman berorientasi objek dengan menggunakan pattern MVC (Model View Controller).
+
 ### Express Model View Controller Pattern (MVC)
 
 **Berikut adalah** gambaran bagaimana kita dapat menerapkan sebuah konsep **MVC** pada aplikasi **NodeJS** kita mengunakan **Express Framework**, yang nantinya bisa teman - teman terapkan saat membuat sebuah aplikasi dengan mengunakan `Nodejs like Express` atau yang lainnya.
