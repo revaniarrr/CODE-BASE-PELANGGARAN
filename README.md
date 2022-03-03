@@ -35,208 +35,218 @@
 
 #### Core Controller
 
-```javascript
-class Controller {
-  get(...rest) {
-    return router.get(...arguments)
-  }
-  post(...rest) {
-    return router.post(...arguments)
-  }
-  delete(...rest) {
-    return router.delete(...arguments)
-  }
-  put(...rest) {
-    return router.put(...arguments)
-  }
+```
+const req = require("express/lib/request")
+let md5 = require("md5")
+let jwt = require('jsonwebtoken')
+
+const {validationResult} = require(`express-validator`)
+
+// memanggil file model untuk User
+let modelUser = require("../models/index").user
+
+
+exports.getDataUser = (request, response) => {
+    modelUser.findAll()
+    .then(result => {
+        return response.json(result)
+    })
+    .catch(error => {
+        return response.json({
+            message: error.message
+        })
+    })
 }
-module.exports = { Controller }
+
+exports.addDataUser = (request, response) => {
+    let error = validationResult(request)
+    if(!error.isEmpty()){
+        return response.json(error.array())
+    }
+    
+    // tampung data request
+    let newUser = {
+        nama_user: request.body.nama_user,
+        username: request.body.username,
+        password:  md5(request.body.password)
+    }
+
+    modelUser.create(newUser)
+    .then(result => {
+        return response.json({
+            message: `Data user berhasil ditambahkan`
+        })
+    })
+    .catch(error => {
+        return response.json({
+            message: error.message
+        })
+    })
+}
+
+exports.editDataUser = (request, response) => {
+    let id = request.params.id_user
+    let dataUser = {
+        nama_user: request.body.nama_user,
+        username: request.body.username,
+        password: md5(request.body.password)
+    }
+
+    modelUser.update(dataUser, { where: {id_user: id} })
+    .then(result => {
+        return response.json({
+            message: `JIAKH Data user berhasil diubah`
+        })
+    })
+    .catch(error => {
+        return response.json({
+            message: error.message
+        })
+    })
+}
+
+exports.deleteDataUser = (request, response) => {
+    let id = request.params.id_user
+
+    modelUser.destroy({where: {id_user: id}})
+    .then(result => {
+        return response.json({
+            message: `JIAKH Data user berhasil dihapus`
+        })
+    })   
+    .catch(error => {
+        return response.json({
+            message: error.message
+        })
+    })
+}
+
+exports.authentication = async(request, response) => {
+    let data = {
+        username: request.body.username,
+        password: md5(request.body.password)
+    }
+
+    // validasi (cek data di tabel user)
+    let result = await modelUser.findOne({where: data})
+
+    if (result) {
+        // data ditemukan
+
+        // payload adalah data/informasi yang akan dienkripsi
+        let payload = JSON.stringify(result) // konversi dari bentuk objek ke JSON
+        let secretKey = `Sequelize itu sangat menyenangkan`
+
+        // generate token
+        let token = jwt.sign(payload, secretKey)
+        return response.json({
+            logged: true,
+            token: token
+        })
+    }else{
+        // data tidak ditemukan
+        return response.json({
+            logged : false,
+            message: `Who the fuck are you?`
+        })
+    }
+}
 ```
 
 #### Core Model
 
-```javascript
-class Model {
-  constructor(schema) {
-    this.model = schema
+```
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class user extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+    }
   }
-  findAll(value) {
-    const { model, connection } = this
-    connection()
-    return model.find({ ...value }).lean()
-  }
-  findOne(value) {
-    const { model } = this
-    return model.findOne({ ...value }).lean()
-  }
-  findById(value) {
-    const { model } = this
-    return model.findById(value).lean()
-  }
-  findOneAndCreate(value) {
-    const { model } = this
-    return model.create({ ...value })
-  }
-  findOneAndDelete(value) {
-    const { model } = this
-    return model.findOneAndDelete({ ...value }).lean()
-  }
-  findOneAndUpdate(id, value) {
-    const { model } = this
-    return model.findOneAndUpdate({ ...id }, { $set: { ...value } }).lean()
-  }
-}
-module.exports = { Model }
+  user.init({
+    id_user:{
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    nama_user: DataTypes.STRING,
+    username: DataTypes.STRING,
+    password: DataTypes.STRING
+  }, {
+    sequelize,
+    modelName: 'user',
+    tableName: 'user'
+  });
+  return user;
+};
 ```
 
 #### Core Route
 
-```javascript
-class Route {
-  init() {
-    return [
-      // init mahasiswa route
-      new CreateMahasiswaRoute().route(),
-      new ResultsMahasiswaRoute().route(),
-      new ResultMahasiswaRoute().route(),
-      new DeleteMahasiswaRoute().route(),
-      new UpdateMahasiswaRoute().route(),
-      //init home route
-      new HomeRoute().route(),
-      new AboutRoute().route()
-    ]
-  }
-}
-module.exports = { Route }
 ```
+const express = require(`express`)
+const app = express()
+const {body} = require(`express-validator`)
 
-#### Core View
+app.use(express.json()) // membaca data dalam format json
 
-```javascript
-class View {
-  render(res, view, data) {
-    res.render(resolve(process.cwd(), `app/views/${view}`), { ...data })
-  }
-}
-module.exports = { View }
+const userController = require("../controllers/userController")
+
+const userValidator = require("../middlewares/userValidator")
+const authorization = require("../middlewares/authorization")
+
+// end-point get data user
+app.get("/", userController.getDataUser)
+
+// end-point add data user
+app.post("/",[authorization.authorization, 
+    userValidator.validate], userController.addDataUser)
+
+// end-point edit data user
+app.put("/:id_user", [authorization.authorization, userValidator.validate],
+userController.editDataUser)
+
+// end-point delete data user
+app.delete("/:id_user", [authorization.authorization],userController.deleteDataUser)
+
+app.post("/auth", userController.authentication)
+
+module.exports = app
 ```
 
 #### Config Connection
 
-```javascript
-class Connection extends Module {
-  constructor() {
-    super()
-    this.db = this.mongoose()
-  }
-  async MongooseConnection() {
-    const { db } = this
-    const connection = await db.connect(process.env.MONGO_URI, {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-      useFindAndModify: false
-    })
-    if (!connection) return console.log('Database Connection Failed')
-    return console.log('Database Connection Successfuly')
-  }
-}
-module.exports = { Connection }
 ```
-
-#### Config Module
-
-```javascript
-class Module {
-  constructor(app) {
-    this.app = app
-  }
-  dotenv() {
-    const env = dotenv.config()
-    return env
-  }
-  bodyParser() {
-    const { app } = this
-    app.use(bodyParser.urlencoded({ extended: false }))
-    app.use(bodyParser.json())
-  }
-  mongoose() {
-    mongoose.Promise = global.Promise
-    return mongoose
-  }
-  morgan() {
-    const { app } = this
-    app.use(logger('dev'))
-  }
-  event() {
-    const events = new EventEmitter()
-    return events
-  }
-  jwt() {
-    return jsonwebtoken
-  }
-  template() {
-    const { app } = this
-    app.set('views', path.resolve(process.cwd(), 'views'))
-    app.set('view engine', 'ejs')
-  }
-  assets() {
-    const { app } = this
-    app.use(express.static(path.resolve(process.cwd(), 'public/assets/')))
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "pelanggaran_siswa2",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "pelanggaran_siswa2",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "pelanggaran_siswa2",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
   }
 }
-module.exports = { Module }
-```
 
-#### App Controller
-
-```javascript
-class CreateMahasiswaController extends Model {
-  constructor() {
-    super()
-    this.model = new Model(mhsSchema)
-    this.jwt = new Jwt()
-  }
-  async controller(req, res) {
-    const { model, jwt } = this
-    const { nama, npm, bid, fak } = req.body
-    const user = await model.findOne({ nama, npm, bid, fak })
-    if (user) {
-      return new CustomeMessage(res).error(409, {
-        response: {
-          status: 'error',
-          code: res.statusCode,
-          method: req.method,
-          message: 'Oops..data already exists in database',
-          data: user
-        }
-      })
-    }
-    const { _id } = await model.findOneAndCreate({ nama, npm, bid, fak })
-    const token = jwt.createToken({ _id, nama }, { expiresIn: '1d', algorithm: 'HS384' })
-    return new CustomeMessage(res).success(200, {
-      response: {
-        status: 'success',
-        code: res.statusCode,
-        method: req.method,
-        message: 'Yeah..data successuly store in database',
-        access_token: token
-      }
-    })
-  }
-}
-module.exports = { CreateMahasiswaController }
-```
-
-#### App Route
-
-```javascript
-class CreateMahasiswaRoute extends Controller {
-  constructor() {
-    super()
-  }
-  route() {
-    return this.post('/mhs/create', (req, res) => new CreateMahasiswaController().controller(req, res))
-  }
-}
-module.exports = { CreateMahasiswaRoute }
 ```
